@@ -4,6 +4,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Properties;
 
@@ -21,6 +22,11 @@ import java.util.Properties;
  */
 
 public class SimpleConsumer {
+
+    final static Long DURATION_POOL_IN_MILLIS = 100L;
+    final static int CONSUMER_MESSAGES_MAX = 5;
+
+
     public static void main(String[] args) {
         String topicName = "producer-example";
         Properties props = new Properties();
@@ -28,19 +34,30 @@ public class SimpleConsumer {
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "testGroup");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "testGroup1");
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "5000");
+
+        props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, Integer.MAX_VALUE);
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, CONSUMER_MESSAGES_MAX);
+
+
 
         Consumer<String, String> consumer = new KafkaConsumer<>(props);
         consumer.subscribe(Collections.singletonList(topicName));
 
         try {
             while (true) {
-                ConsumerRecords<String, String> records = consumer.poll(100);
+                ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(DURATION_POOL_IN_MILLIS));
+                if (!records.isEmpty()) {
+                    System.out.println("Messages:" + records.count());
+                }
                 for (var record : records) {
                     System.out.printf("Received message: (timestamp: %tT, key: %s, value: %s, partition: %d, offset: %d)\n",
-                           record.timestamp(), record.key(), record.value(), record.partition(), record.offset());
+                            record.timestamp(), record.key(), record.value(), record.partition(), record.offset());
                 }
+                consumer.commitSync();
             }
         } finally {
             consumer.close();
