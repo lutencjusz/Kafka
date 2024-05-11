@@ -25,10 +25,10 @@ public class SimpleConsumer {
 
     final static Long DURATION_POOL_IN_MILLIS = 100L;
     final static int CONSUMER_MESSAGES_MAX = 5;
+    final static String TOPIC_NAME = "producer-example";
 
 
     public static void main(String[] args) {
-        String topicName = "producer-example";
         Properties props = new Properties();
 
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
@@ -41,11 +41,11 @@ public class SimpleConsumer {
 
         props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, Integer.MAX_VALUE);
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, CONSUMER_MESSAGES_MAX);
-
+        props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
 
 
         Consumer<String, String> consumer = new KafkaConsumer<>(props);
-        consumer.subscribe(Collections.singletonList(topicName));
+        consumer.subscribe(Collections.singletonList(TOPIC_NAME));
 
         try {
             while (true) {

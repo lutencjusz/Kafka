@@ -6,7 +6,7 @@ import java.util.concurrent.ExecutionException;
 
 /**
  * Producent Kafka
- * Wysyła 10 wiadomości do tematu "my-topic"
+ * Wysyła PRODUCER_MESSAGES_MAX wiadomości do tematu TOPIC_NAME
  * <p>
  * Aby uruchomić Kafkę, należy w terminalu wpisać:
  * cd C:\Kafka\kafka_2.13-3.7.0
@@ -19,7 +19,7 @@ import java.util.concurrent.ExecutionException;
 public class SimpleProducer {
 
     private final static String TOPIC_NAME = "producer-example";
-    private final static int PRODUCER_MESSAGES_MAX = 200;
+    private final static int PRODUCER_MESSAGES_MAX = 2;
 
     public static void main(String[] args) {
         Properties props = new Properties();
