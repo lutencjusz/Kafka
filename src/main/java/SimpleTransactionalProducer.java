@@ -37,6 +37,7 @@ public class SimpleTransactionalProducer {
                 producer.send(new ProducerRecord<>(TOPIC_NAME, null, new Product(message, 1))).get();
             } catch (InterruptedException | ExecutionException e) {
                 producer.abortTransaction();
+                System.out.println("Transakcja przerwana z błędem: " + e.getMessage());
                 throw new RuntimeException(e);
             }
         }
