@@ -1,12 +1,13 @@
 import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Properties;
+
+import static java.util.Collections.singletonList;
 
 /**
  * Konsument Kafka
@@ -29,6 +30,25 @@ public class SimpleConsumer {
 
 
     public static void main(String[] args) {
+        final Consumer<String, String> consumer = getStringStringConsumer();
+
+        try (consumer) {
+            consumer.subscribe(singletonList(TOPIC_NAME));
+            do {
+                ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(DURATION_POOL_IN_MILLIS));
+                if (!records.isEmpty()) {
+                    System.out.println("Messages:" + records.count());
+                }
+                for (var record : records) {
+                    System.out.printf("Received message: (timestamp: %tT, key: %s, value: %s, partition: %d, offset: %d)\n",
+                            record.timestamp(), record.key(), record.value(), record.partition(), record.offset());
+                }
+                consumer.commitSync();
+            } while (true);
+        }
+    }
+
+    private static Consumer<String, String> getStringStringConsumer() {
         Properties props = new Properties();
 
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
@@ -44,24 +64,7 @@ public class SimpleConsumer {
         props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
 
 
-        Consumer<String, String> consumer = new KafkaConsumer<>(props);
-        consumer.subscribe(Collections.singletonList(TOPIC_NAME));
-
-        try {
-            while (true) {
-                ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(DURATION_POOL_IN_MILLIS));
-                if (!records.isEmpty()) {
-                    System.out.println("Messages:" + records.count());
-                }
-                for (var record : records) {
-                    System.out.printf("Received message: (timestamp: %tT, key: %s, value: %s, partition: %d, offset: %d)\n",
-                            record.timestamp(), record.key(), record.value(), record.partition(), record.offset());
-                }
-                consumer.commitSync();
-            }
-        } finally {
-            consumer.close();
-        }
+        return new KafkaConsumer<>(props);
     }
 }
 
